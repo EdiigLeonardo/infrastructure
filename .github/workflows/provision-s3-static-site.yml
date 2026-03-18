@@ -4,3 +4,34 @@ on:
   issues:
     types: [opened]
   workflow_dispatch:
+    inputs:
+      bucket_name:
+        description: "The name of the bucket to create"
+        required: true
+        default: "my-static-site"
+jobs:
+  provision:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+      - name: Initialize Terraform
+        run: terraform init
+        working-directory: ./s3-bucket-static
+      - name: Apply Terraform
+        run: |
+          # Use input bucket_name if available, otherwise use issue number
+          BUCKET_NAME="${{ github.event.inputs.bucket_name }}"
+          if [ -z "$BUCKET_NAME" ] && [ "${{ github.event_name }}" == "issues" ]; then
+            BUCKET_NAME="issue-${{ github.event.issue.number }}"
+          fi
+
+          if [ -z "$BUCKET_NAME" ]; then
+            echo "Error: No bucket name provided."
+            exit 1
+          fi
+
+          terraform apply -auto-approve -var="bucket_name=$BUCKET_NAME"
+        working-directory: ./s3-bucket-static
