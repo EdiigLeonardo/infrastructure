@@ -3,16 +3,17 @@ name: Create S3 Static Site
 on:
   issues:
     types: [opened, closed]
+  push:
+    branches: [main]
+    paths:
+      - "s3-bucket-static/**"
   workflow_dispatch:
     inputs:
       bucket_name:
         description: "The name of the bucket to create"
         required: true
         default: "my-static-site"
-  push:
-    branches: [main]
-    paths:
-      - "s3-bucket-static/**"
+
 jobs:
   provision:
     runs-on: ubuntu-latest
